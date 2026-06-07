@@ -327,11 +327,9 @@ local function updateList(searchTerm)
         newButton.Parent = ScrollingFrame
     end
     
-    -- Update canvas size
-    local buttonHeight = TemplateButton.Size.Y.Offset or 40
-    local spacing = 5
-    local totalHeight = (#displayList * buttonHeight) + ((#displayList - 1) * spacing)
-    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+    -- Update canvas size secara otomatis menyesuaikan jumlah emote
+    ScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
     
     if DEBUG_MODE then dPrint("[EmoteSystem] Updated list with " .. #displayList .. " items") end
 end
