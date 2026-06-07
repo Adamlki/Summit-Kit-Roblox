@@ -1,3 +1,7 @@
+local DEBUG_MODE = false
+local function dPrint(...) if DEBUG_MODE then dPrint(...) end end
+local function dWarn(...) if DEBUG_MODE then dWarn(...) end end
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterGui = game:GetService("StarterGui")
@@ -13,7 +17,7 @@ local ProximityPromptService = game:GetService("ProximityPromptService")
 
 local eventTitleGui = playerGui:WaitForChild("EventTitle", 999)
 if not eventTitleGui then 
-	warn("EventTitle GUI gagal dimuat karena lag ekstrim!")
+	dWarn("EventTitle GUI gagal dimuat karena lag ekstrim!")
 	return 
 end
 

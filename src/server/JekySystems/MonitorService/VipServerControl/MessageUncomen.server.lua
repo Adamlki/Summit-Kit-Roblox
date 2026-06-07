@@ -1,3 +1,7 @@
+local DEBUG_MODE = false
+local function dPrint(...) if DEBUG_MODE then dPrint(...) end end
+local function dWarn(...) if DEBUG_MODE then dWarn(...) end end
+
 --// SERVICES
 local Players           = game:GetService("Players")
 local MessagingService  = game:GetService("MessagingService")
@@ -40,7 +44,7 @@ local function filterMessage(fromPlayer, message)
     if success then
         return result
     else
-        warn("Filter failed:", result)
+        dWarn("Filter failed:", result)
         return nil
     end
 end

@@ -62,7 +62,13 @@ local function getCharHRP(p: Player)
     return char, hrp, hum
 end
 
-local function acquireLock(uid: number) while lockMap[uid] do task.wait() end lockMap[uid] = true end
+local function acquireLock(uid: number)
+    local waited = 0
+    while lockMap[uid] and waited < 5 do
+        waited += task.wait()
+    end
+    lockMap[uid] = true
+end
 local function releaseLock(uid: number) lockMap[uid] = false end
 local function acquireLocks(a: number, b: number)
     if a == b then acquireLock(a) return end

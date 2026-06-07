@@ -1,3 +1,7 @@
+local DEBUG_MODE = false
+local function dPrint(...) if DEBUG_MODE then dPrint(...) end end
+local function dWarn(...) if DEBUG_MODE then dWarn(...) end end
+
 local Players           = game:GetService("Players")
 local ServerStorage     = game:GetService("ServerStorage")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -174,31 +178,37 @@ local function getDestinasi(checkpointId)
     return model:FindFirstChild("Destinasi")
 end
  
+local lbUpdateQueued = false
 local function updateServerLeaderboard()
-    local data = {}
-    for _, p in ipairs(Players:GetPlayers()) do
-        local ls = p:FindFirstChild("leaderstats")
-        if ls then
-            local summit = ls:FindFirstChild("Summit")
-            local cp     = ls:FindFirstChild("Checkpoint")
-            if summit and cp then
-                table.insert(data, {
-                UserId      = p.UserId,
-                Username    = p.Name,
-                DisplayName = p.DisplayName,
-                Summit      = tonumber(summit.Value) or 0,
-                Checkpoint  = cp.Value,
-                IsOnline    = true,
-                })
+    if lbUpdateQueued then return end
+    lbUpdateQueued = true
+    task.delay(1.5, function()
+        lbUpdateQueued = false
+        local data = {}
+        for _, p in ipairs(Players:GetPlayers()) do
+            local ls = p:FindFirstChild("leaderstats")
+            if ls then
+                local summit = ls:FindFirstChild("Summit")
+                local cp     = ls:FindFirstChild("Checkpoint")
+                if summit and cp then
+                    table.insert(data, {
+                    UserId      = p.UserId,
+                    Username    = p.Name,
+                    DisplayName = p.DisplayName,
+                    Summit      = tonumber(summit.Value) or 0,
+                    Checkpoint  = cp.Value,
+                    IsOnline    = true,
+                    })
+                end
             end
         end
-    end
-    table.sort(data, function(a, b)
-        if a.Summit == b.Summit then return a.Username < b.Username end
-        return a.Summit > b.Summit
+        table.sort(data, function(a, b)
+            if a.Summit == b.Summit then return a.Username < b.Username end
+            return a.Summit > b.Summit
+        end)
+        ServerLeaderboard = data
+        CP_Internal_ServerLBUpdate:Fire(data)
     end)
-    ServerLeaderboard = data
-    CP_Internal_ServerLBUpdate:Fire(data)
 end
  
 local function updateGlobalLeaderboard()
@@ -557,7 +567,7 @@ end
     local missingCP = not JekyConfig:GetSkipCheckpointMode() and getMissingCheckpoint(uid) or nil
     if missingCP then 
         -- TAMBAHKAN WARNING AGAR TIDAK SILENT FAILURE
-        warn(player.Name .. " mencoba Summit tetapi belum menginjak semua CP! Missing: CP" .. missingCP)
+        dWarn(player.Name .. " mencoba Summit tetapi belum menginjak semua CP! Missing: CP" .. missingCP)
         
         -- Beritahu UI Client bahwa mereka melewatkan CP
         CP_SkippedWarning:FireClient(player, missingCP) 
@@ -930,14 +940,7 @@ end
                                                                                     task.spawn(updateServerLeaderboard)
                                                                                 end)
                                                                                 
-                                                                                local ReplicatedStorage = game:GetService("ReplicatedStorage")
-                                                                                local Event = ReplicatedStorage:FindFirstChild("CP_RequestTeleportToLastCP") or Instance.new("RemoteEvent", ReplicatedStorage); Event.Name = "CP_RequestTeleportToLastCP"
-                                                                                Event.OnServerEvent:Connect(function(player)
-                                                                                    local character = player.Character
-                                                                                    if character and PlayerRespawnLocation[player.UserId] then
-                                                                                        teleportToCheckpoint(character, PlayerRespawnLocation[player.UserId])
-                                                                                    end
-                                                                                end)
+                                                                                -- Duplicate teleport connection removed
                                                                                 
                                                                                 task.spawn(function()
                                                                                     workspace:WaitForChild("AllPartSummitkitJeky", 30)

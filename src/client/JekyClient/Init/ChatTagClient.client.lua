@@ -1,3 +1,7 @@
+local DEBUG_MODE = false
+local function dPrint(...) if DEBUG_MODE then dPrint(...) end end
+local function dWarn(...) if DEBUG_MODE then dWarn(...) end end
+
 -- LocalScript: StarterPlayerScripts/ChatTag_Client
 -- FIXED VERSION: colorize, timing, rich text + VIP gradient Cyan→Biru→Ungu→Pink→Putih
 
@@ -167,7 +171,7 @@ task.spawn(function()
 	RoleUpdatedRE    = ReplicatedStorage:WaitForChild("ChatTag_RoleUpdated", 15)
 
 	if not GetPlayerRolesRF then
-		warn("[ChatTag] ChatTag_GetRoles tidak ditemukan! Pastikan Server Script berjalan.")
+		dWarn("[ChatTag] ChatTag_GetRoles tidak ditemukan! Pastikan Server Script berjalan.")
 		return
 	end
 

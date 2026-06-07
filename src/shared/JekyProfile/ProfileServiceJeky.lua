@@ -1,3 +1,7 @@
+local DEBUG_MODE = false
+local function dPrint(...) if DEBUG_MODE then dPrint(...) end end
+local function dWarn(...) if DEBUG_MODE then dWarn(...) end end
+
 -- ReplicatedStorage/JekyProfile/ProfileServiceJeky
 -- v8 — fix GlobalLB stale data + reset support
  
@@ -94,21 +98,21 @@ end
 local function safeSet(store, key, value)
     if not waitForWriteBudget(10) then return false end
     local ok, err = pcall(function() store:SetAsync(key, value) end)
-        if not ok then warn("[PS] safeSet:", err) end
+        if not ok then dWarn("[PS] safeSet:", err) end
         return ok
     end
     
     local function safeGet(store, key)
         if not waitForReadBudget(10) then return false, nil end
         local ok, r = pcall(function() return store:GetAsync(key) end)
-            if not ok then warn("[PS] safeGet:", r) end
+            if not ok then dWarn("[PS] safeGet:", r) end
             return ok, ok and r or nil
         end
         
         local function safeUpdate(store, key, fn)
             if not waitForWriteBudget(15) then return false, nil end
             local ok, r = pcall(function() return store:UpdateAsync(key, fn) end)
-                if not ok then warn("[PS] safeUpdate:", r) end
+                if not ok then dWarn("[PS] safeUpdate:", r) end
                 return ok, ok and r or nil
             end
             
@@ -328,7 +332,7 @@ local function safeSet(store, key, value)
                                 end)
                                 if ok and data then result = data; break end
                                 if ok and not data then
-                                    warn("[PS] Session conflict userId:", userId, "attempt", attempt)
+                                    dWarn("[PS] Session conflict userId:", userId, "attempt", attempt)
                                     task.wait(RETRY_WAIT * attempt)
                                 else
                                     task.wait(RETRY_WAIT)
@@ -336,7 +340,7 @@ local function safeSet(store, key, value)
                             end
                             
                             if not result then
-                                warn("[PS] GAGAL load profile userId:", userId)
+                                dWarn("[PS] GAGAL load profile userId:", userId)
                                 return nil
                             end
                             
@@ -412,7 +416,7 @@ local function safeSet(store, key, value)
                                             profiles[userId] = nil
                                         end
                                     else
-                                        warn("[PS] Save error userId:", userId, err)
+                                        dWarn("[PS] Save error userId:", userId, err)
                                     end
                                     return ok
                                 end

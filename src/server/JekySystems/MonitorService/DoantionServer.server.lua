@@ -1,3 +1,7 @@
+local DEBUG_MODE = false
+local function dPrint(...) if DEBUG_MODE then dPrint(...) end end
+local function dWarn(...) if DEBUG_MODE then dWarn(...) end end
+
 -- ServerScriptService > DonationServer
 local Players           = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
@@ -86,7 +90,7 @@ MarketplaceService.ProcessReceipt = function(receiptInfo)
 
 	-- 🛑 TAMBAHKAN PENGECEKAN STUDIO DI SINI 🛑
 	if RunService:IsStudio() then
-		print("[DonationServer] Pembelian TEST di Studio berhasil. (TIDAK DISIMPAN KE LEADERBOARD)")
+		dPrint("[DonationServer] Pembelian TEST di Studio berhasil. (TIDAK DISIMPAN KE LEADERBOARD)")
 		broadcastDonation(donorPlayer, price) -- Tetap broadcast agar kamu bisa ngetes UI notifikasinya
 		return Enum.ProductPurchaseDecision.PurchaseGranted
 	end
@@ -101,7 +105,7 @@ MarketplaceService.ProcessReceipt = function(receiptInfo)
 		broadcastDonation(donorPlayer, price)
 		return Enum.ProductPurchaseDecision.PurchaseGranted
 	else
-		warn("[DonationServer] Gagal menyimpan donasi untuk " .. donorPlayer.Name .. ": " .. tostring(err))
+		dWarn("[DonationServer] Gagal menyimpan donasi untuk " .. donorPlayer.Name .. ": " .. tostring(err))
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 end

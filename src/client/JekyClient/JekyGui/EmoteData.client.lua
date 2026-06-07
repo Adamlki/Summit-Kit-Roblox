@@ -9,6 +9,8 @@ local UserInputService = game:GetService("UserInputService")
 -- DEBUG SETTINGS
 -- ============================================
 local DEBUG_MODE = false  -- Set ke true untuk debug
+local function dPrint(...) if DEBUG_MODE then dPrint(...) end end
+local function dWarn(...) if DEBUG_MODE then dWarn(...) end end
  
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -156,7 +158,7 @@ local function playAnimation(animId, buttonClicked)
         buttonClicked.TextColor3 = modeColor
         currentPlayingButton = nil
         
-        if DEBUG_MODE then print("[EmoteSystem] Stopped animation") end
+        if DEBUG_MODE then dPrint("[EmoteSystem] Stopped animation") end
         return
     end
     
@@ -180,7 +182,15 @@ local function playAnimation(animId, buttonClicked)
     -- Create new animation
     local anim = Instance.new("Animation")
     anim.AnimationId = "rbxassetid://"..animId
-    currentTrack = humanoid:LoadAnimation(anim)
+    
+    local animator = humanoid:FindFirstChildOfClass("Animator")
+    if animator then
+        currentTrack = animator:LoadAnimation(anim)
+    else
+        currentTrack = humanoid:LoadAnimation(anim)
+    end
+    
+    currentTrack.Priority = Enum.AnimationPriority.Action4
     currentTrack:Play()
     currentTrack:AdjustSpeed(currentSpeed)
     
@@ -190,7 +200,7 @@ local function playAnimation(animId, buttonClicked)
         currentPlayingButton = buttonClicked
     end
     
-    if DEBUG_MODE then print("[EmoteSystem] Playing animation: " .. animId) end
+    if DEBUG_MODE then dPrint("[EmoteSystem] Playing animation: " .. animId) end
 end
  
 -- ============================================
@@ -227,7 +237,7 @@ end
  
 local function initializeSpeedSlider()
     if not SpeedBar or not SpeedSlider then 
-        if DEBUG_MODE then warn("[EmoteSystem] SpeedBar or SpeedSlider not found!") end
+        if DEBUG_MODE then dWarn("[EmoteSystem] SpeedBar or SpeedSlider not found!") end
         return 
     end
     
@@ -271,7 +281,7 @@ end
 -- ============================================
 local function updateList(searchTerm)
     if not ScrollingFrame or not TemplateButton then 
-        if DEBUG_MODE then warn("[EmoteSystem] ScrollingFrame or TemplateButton not found!") end
+        if DEBUG_MODE then dWarn("[EmoteSystem] ScrollingFrame or TemplateButton not found!") end
         return 
     end
     
@@ -323,7 +333,7 @@ local function updateList(searchTerm)
     local totalHeight = (#displayList * buttonHeight) + ((#displayList - 1) * spacing)
     ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
     
-    if DEBUG_MODE then print("[EmoteSystem] Updated list with " .. #displayList .. " items") end
+    if DEBUG_MODE then dPrint("[EmoteSystem] Updated list with " .. #displayList .. " items") end
 end
  
 -- ============================================
@@ -382,7 +392,7 @@ local function openFrame()
     isFrameOpen = true
     EmotePanel.Visible = true
     
-    if DEBUG_MODE then print("[EmoteSystem] Frame opened") end
+    if DEBUG_MODE then dPrint("[EmoteSystem] Frame opened") end
 end
  
 local function closeFrame()
@@ -391,7 +401,7 @@ local function closeFrame()
     isFrameOpen = false
     EmotePanel.Visible = false
     
-    if DEBUG_MODE then print("[EmoteSystem] Frame closed") end
+    if DEBUG_MODE then dPrint("[EmoteSystem] Frame closed") end
 end
  
 -- ============================================
@@ -446,7 +456,7 @@ end
 -- WAIT FOR GUI ELEMENTS
 -- ============================================
 local function waitForElements()
-    if DEBUG_MODE then print("[EmoteSystem] Looking for GUI elements...") end
+    if DEBUG_MODE then dPrint("[EmoteSystem] Looking for GUI elements...") end
     
     ListGui = playerGui:WaitForChild("ListGui", 999)
     if not ListGui then return false end
@@ -477,10 +487,10 @@ end
 -- INITIALIZE SYSTEM
 -- ============================================
 local function initializeSystem()
-    if DEBUG_MODE then print("[EmoteSystem] Initializing...") end
+    if DEBUG_MODE then dPrint("[EmoteSystem] Initializing...") end
     
     if not waitForElements() then 
-        if DEBUG_MODE then warn("[EmoteSystem] Failed to find GUI elements!") end
+        if DEBUG_MODE then dWarn("[EmoteSystem] Failed to find GUI elements!") end
         return 
     end
     
@@ -544,7 +554,7 @@ local function initializeSystem()
     -- Setup auto close
     setupAutoClose()
     
-    if DEBUG_MODE then print("[EmoteSystem] Initialization complete!") end
+    if DEBUG_MODE then dPrint("[EmoteSystem] Initialization complete!") end
 end
  
 -- ============================================
@@ -555,7 +565,7 @@ task.spawn(function()
     
     local success, err = pcall(initializeSystem)
     if not success then
-        warn("[EmoteSystem ERROR]: " .. err)
+        dWarn("[EmoteSystem ERROR]: " .. err)
     end
 end)
 

@@ -221,26 +221,9 @@ end
 -- ============================================================
 -- CANVAS AUTO-RESIZE
 -- ============================================================
-local listLayout = ScrollingFrame:FindFirstChildOfClass("UIListLayout")
- 
-local refreshQueued = false
-local function refreshCanvas()
-    if listLayout and not refreshQueued then
-        refreshQueued = true
-        task.defer(function()
-            if ScrollingFrame and listLayout then
-                ScrollingFrame.CanvasSize = UDim2.new(
-                    0, 0,
-                    0, listLayout.AbsoluteContentSize.Y
-                )
-            end
-            refreshQueued = false
-        end)
-    end
-end
- 
-if listLayout then
-    listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshCanvas)
+if ScrollingFrame then
+    ScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 end
  
 -- ============================================================
@@ -336,7 +319,6 @@ local function rebuildAll(doAnimate)
     for i, player in ipairs(sorted) do
         buildEntry(player, i, doAnimate)
     end
-    refreshCanvas()
 end
  
 local function updateEntry(player)

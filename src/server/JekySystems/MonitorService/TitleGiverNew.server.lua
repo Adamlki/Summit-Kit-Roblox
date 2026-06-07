@@ -1,3 +1,7 @@
+local DEBUG_MODE = false
+local function dPrint(...) if DEBUG_MODE then dPrint(...) end end
+local function dWarn(...) if DEBUG_MODE then dWarn(...) end end
+
 local RS = game:GetService("ReplicatedStorage")
 local DSS = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
@@ -181,8 +185,18 @@ local function applyTitle(player, data)
 	end
 end
 
+local rateLimits = {}
+local function checkRateLimit(userId, key, limit)
+	local id = userId .. "_" .. key
+	local now = os.clock()
+	if rateLimits[id] and (now - rateLimits[id]) < limit then return false end
+	rateLimits[id] = now
+	return true
+end
+
 ApplyEvent.OnServerEvent:Connect(function(sender, data)
 	if type(data) ~= "table" then return end
+	if not checkRateLimit(sender.UserId, "ApplyTitle", 2) then return end
 
 	if data.RequestData then
 		local target = Players:FindFirstChild(data.TargetName) or sender
@@ -197,7 +211,7 @@ ApplyEvent.OnServerEvent:Connect(function(sender, data)
 	if target ~= sender then
 		local senderRole = sender:GetAttribute("RoleTitle")
 		if not JekyConfig:HasCommandAccess(senderRole, "_AddRole") then
-			warn("Exploit terdeteksi: " .. sender.Name .. " mencoba memodifikasi title milik " .. target.Name)
+			dWarn("Exploit terdeteksi: " .. sender.Name .. " mencoba memodifikasi title milik " .. target.Name)
 			return
 		end
 	end
@@ -235,6 +249,7 @@ local LINE_REQUIREMENTS = {
 }
 
 EventTitleClaim.OnServerEvent:Connect(function(player, action, lineIdx, data)
+	if not checkRateLimit(player.UserId, "TitleClaim", 1) then return end
 	if action == "GetStatus" then
 		local existing = loadTitle(player.UserId)
 		local status = {
@@ -283,6 +298,7 @@ EventTitleClaim.OnServerEvent:Connect(function(player, action, lineIdx, data)
 end)
 
 EventTitlePreview.OnServerEvent:Connect(function(player, lineIdx, data)
+	if not checkRateLimit(player.UserId, "TitlePreview", 5.5) then return end
 	if type(lineIdx) ~= "number" or type(data) ~= "table" then return end
 	
 	local previewData = {}
@@ -323,6 +339,14 @@ Players.PlayerAdded:Connect(function(p)
 		task.wait(0.5)
 		autoLoad(p)
 	end
+end)
+
+Players.PlayerRemoving:Connect(function(p)
+	titleCache[p.UserId] = nil
+	-- Bersihkan rateLimits cache juga
+	rateLimits[p.UserId .. "_ApplyTitle"] = nil
+	rateLimits[p.UserId .. "_TitleClaim"] = nil
+	rateLimits[p.UserId .. "_TitlePreview"] = nil
 end)
 
 for _, p in ipairs(Players:GetPlayers()) do
@@ -368,4 +392,4 @@ task.spawn(function()
 			end)
 		end
 	end
-end)
+end)

@@ -1,3 +1,7 @@
+local DEBUG_MODE = false
+local function dPrint(...) if DEBUG_MODE then dPrint(...) end end
+local function dWarn(...) if DEBUG_MODE then dWarn(...) end end
+
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -32,10 +36,10 @@ local PlayerGui = localPlayer:WaitForChild("PlayerGui")
 -- Menggunakan WaitForChild dengan waktu yang sangat lama (999 detik) 
 -- agar script SABAR menunggu meskipun player lag parah saat loading.
 local isiGui = PlayerGui:WaitForChild("IsiGui", 999)
-if not isiGui then warn("Custom Context Menu: 'IsiGui' gagal dimuat karena lag ekstrim!") return end
+if not isiGui then dWarn("Custom Context Menu: 'IsiGui' gagal dimuat karena lag ekstrim!") return end
 
 local contextMenu = isiGui:WaitForChild("AvatarContextMenu", 999)
-if not contextMenu then warn("Custom Context Menu: 'AvatarContextMenu' gagal dimuat!") return end
+if not contextMenu then dWarn("Custom Context Menu: 'AvatarContextMenu' gagal dimuat!") return end
 
 contextMenu.Visible = false
 

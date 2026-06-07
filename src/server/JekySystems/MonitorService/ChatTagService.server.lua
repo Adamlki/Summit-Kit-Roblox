@@ -70,13 +70,15 @@ local function getPlayerRoles(player)
 
 	-- Debug: cetak roles di Output Studio
 	local DEBUG_MODE = false
+local function dPrint(...) if DEBUG_MODE then dPrint(...) end end
+local function dWarn(...) if DEBUG_MODE then dWarn(...) end end
 	if DEBUG_MODE then
-		print(string.format("[ChatTag] Roles for %s (UserId: %d):", player.Name, player.UserId))
+		dPrint(string.format("[ChatTag] Roles for %s (UserId: %d):", player.Name, player.UserId))
 		if #roles == 0 then
-			print("  -> (tidak ada role)")
+			dPrint("  -> (tidak ada role)")
 		else
 			for _, r in ipairs(roles) do
-				print(string.format("  -> %s (priority: %d)", r.name, r.priority))
+				dPrint(string.format("  -> %s (priority: %d)", r.name, r.priority))
 			end
 		end
 	end
