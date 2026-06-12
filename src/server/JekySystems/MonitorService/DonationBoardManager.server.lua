@@ -184,54 +184,25 @@ local function updateStatue(rank, userId, displayName, totalDonated)
 				animator.Parent = humanoid
 			end
 
-			local isPlaying = false
-			local existingTrack = nil
+			-- Gunakan track yang sudah di-cache agar tidak perlu LoadAnimation berkali-kali (mencegah memory leak)
+			if not dummyCache.AnimationTrack then
+				local anim = Instance.new("Animation")
+				anim.AnimationId = EMOTE_ID
+				dummyCache.AnimationTrack = animator:LoadAnimation(anim)
+				dummyCache.AnimationTrack.Looped = true
+			end
 
+			-- Stop animasi lain yang sedang berjalan (jika ada)
 			for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
-				if track.Animation and track.Animation.AnimationId == EMOTE_ID then
-					existingTrack = track
-					isPlaying = true
-					break
+				if track ~= dummyCache.AnimationTrack then
+					track:Stop()
 				end
 			end
 
-			-- Check loaded tracks too just in case it stopped
-			if not existingTrack then
-				for _, track in ipairs(animator:GetAnimationTracks()) do
-					if track.Animation and track.Animation.AnimationId == EMOTE_ID then
-						existingTrack = track
-						break
-					end
-				end
-			end
-
-			if not isPlaying then
-				-- Stop other tracks
-				for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
-					if track ~= existingTrack then
-						track:Stop()
-					end
-				end
-
+			-- Mainkan track jika belum berjalan
+			if not dummyCache.AnimationTrack.IsPlaying then
 				debugLog("STATUE", "Memutar animasi emote untuk Top " .. rank)
-				
-				if existingTrack then
-					existingTrack.Looped = true
-					existingTrack:Play()
-				else
-					local anim = Instance.new("Animation")
-					anim.AnimationId = EMOTE_ID
-
-					local successAnim, errAnim = pcall(function()
-						local track = animator:LoadAnimation(anim)
-						track.Looped = true
-						track:Play()
-					end)
-
-					if not successAnim then
-						debugLog("STATUE", "Gagal memutar animasi: " .. tostring(errAnim), true)
-					end
-				end
+				dummyCache.AnimationTrack:Play()
 			end
 		end)
 	else
