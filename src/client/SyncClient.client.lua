@@ -85,6 +85,12 @@ local function startLocalSync(targetPlayer)
 			if followerTrack.IsPlaying then
 				followerTrack:Stop()
 			end
+			-- Clear from cache and destroy to prevent exceeding the 64 tracks limit
+			if cachedTracks[animId] == followerTrack then
+				cachedTracks[animId] = nil
+			end
+			pcall(function() followerTrack:Destroy() end)
+
 			if stopConn then 
 				stopConn:Disconnect() 
 				local index = table.find(stopConns, stopConn)

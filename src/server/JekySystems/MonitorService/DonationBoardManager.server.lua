@@ -185,30 +185,52 @@ local function updateStatue(rank, userId, displayName, totalDonated)
 			end
 
 			local isPlaying = false
+			local existingTrack = nil
+
 			for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
-				if track.Animation.AnimationId == EMOTE_ID then
+				if track.Animation and track.Animation.AnimationId == EMOTE_ID then
+					existingTrack = track
 					isPlaying = true
 					break
 				end
 			end
 
+			-- Check loaded tracks too just in case it stopped
+			if not existingTrack then
+				for _, track in ipairs(animator:GetAnimationTracks()) do
+					if track.Animation and track.Animation.AnimationId == EMOTE_ID then
+						existingTrack = track
+						break
+					end
+				end
+			end
+
 			if not isPlaying then
+				-- Stop other tracks
 				for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
-					track:Stop()
+					if track ~= existingTrack then
+						track:Stop()
+					end
 				end
 
 				debugLog("STATUE", "Memutar animasi emote untuk Top " .. rank)
-				local anim = Instance.new("Animation")
-				anim.AnimationId = EMOTE_ID
+				
+				if existingTrack then
+					existingTrack.Looped = true
+					existingTrack:Play()
+				else
+					local anim = Instance.new("Animation")
+					anim.AnimationId = EMOTE_ID
 
-				local successAnim, errAnim = pcall(function()
-					local track = animator:LoadAnimation(anim)
-					track.Looped = true
-					track:Play()
-				end)
+					local successAnim, errAnim = pcall(function()
+						local track = animator:LoadAnimation(anim)
+						track.Looped = true
+						track:Play()
+					end)
 
-				if not successAnim then
-					debugLog("STATUE", "Gagal memutar animasi: " .. tostring(errAnim), true)
+					if not successAnim then
+						debugLog("STATUE", "Gagal memutar animasi: " .. tostring(errAnim), true)
+					end
 				end
 			end
 		end)

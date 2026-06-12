@@ -122,26 +122,44 @@ local function safeSet(store, key, value)
             local usernameCache      = {}
             local usernameTimestamps = {}
             local usernameWriteLast  = {}
-            local usernameWriteBusy  = {}
             local usernameResolving  = {}
             
+            -- Antrean penyimpanan agar tidak spam DataStore Queue
+            local usernameSaveQueue = {}
+            local isUsernameSaverRunning = false
+
+            local function startUsernameSaver()
+                if isUsernameSaverRunning then return end
+                isUsernameSaverRunning = true
+                task.spawn(function()
+                    while true do
+                        local nextUserId, nextName = next(usernameSaveQueue)
+                        if nextUserId then
+                            usernameSaveQueue[nextUserId] = nil
+                            local store = getStore(DSKeys.Profile.."_UserCache")
+                            if store and waitForWriteBudget(15) then
+                                pcall(function() store:SetAsync("U_"..nextUserId, nextName) end)
+                                usernameWriteLast[nextUserId] = os.time()
+                            end
+                            task.wait(2) -- Beri jeda 2 detik antar request agar tidak memicu peringatan kuning
+                        else
+                            task.wait(1)
+                        end
+                    end
+                end)
+            end
+
             local function _persistUsername(userId, name)
                 if not userId or not name or name == "" then return end
-                if usernameWriteBusy[userId] then return end
                 local now = os.time()
                 if usernameWriteLast[userId] and (now - usernameWriteLast[userId]) < USERNAME_WRITE_COOLDOWN then
                     return
                 end
-                usernameWriteBusy[userId] = true
-                task.spawn(function()
-                    local store = getStore(DSKeys.Profile.."_UserCache") -- Menggunakan prefix Profile agar unik
-                    if store and waitForWriteBudget(15) then
-                        pcall(function() store:SetAsync("U_"..userId, name) end)
-                            usernameWriteLast[userId] = os.time()
-                        end
-                        usernameWriteBusy[userId] = nil
-                    end)
-                end
+                
+                -- Masukkan ke antrean dan jalankan prosesor antrean
+                usernameSaveQueue[userId] = name
+                startUsernameSaver()
+            end
                 
                 function PS.CacheUsername(userId, name)
                     if not userId or not name or name == "" then return end
